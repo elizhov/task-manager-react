@@ -1,54 +1,47 @@
-import { useContext, useState } from "react";
+import { useState, useContext } from "react";
 import { TodoContext } from "../contexts/todo-context.jsx";
 
+const availableAssignees = ["John", "Alice", "Bob", "Jane"];
+
+
 const Todo = ({ todo }) => {
-    const { deleteTodo, editPriority, editStatus, editTitle } = useContext(TodoContext);
+    const { deleteTodo, editPriority, editStatus, editTitle, editAssignees } = useContext(TodoContext);
 
-    // Manage edit mode
-    const [isEditmode, setIsEditmode] = useState(false);
-    const [inputValue, setInputValue] = useState(todo.value);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [newTitle, setNewTitle] = useState(todo.value);
+    const [newPriority, setNewPriority] = useState(todo.priority);
+    const [newStatus, setNewStatus] = useState(todo.status);
+    const [selectedAssignees, setSelectedAssignees] = useState(todo.assignees);
 
-    const handlePriorityChange = (e) => {
-        editPriority(todo.id, e.target.value);
-    };
+    const handleTitleChange = (e) => setNewTitle(e.target.value);
+    const handlePriorityChange = (e) => setNewPriority(e.target.value);
+    const handleStatusChange = (e) => setNewStatus(e.target.value);
 
-    const handleStatusChange = (e) => {
-        editStatus(todo.id, e.target.value);
-    };
-
-    const handleTitleChange = (e) => {
-        setInputValue(e.target.value);
-    };
-
-    const handleEdit = () => {
-        setIsEditmode(!isEditmode); // Toggle edit mode
-        if (isEditmode) {
-            // Save the edited title if exiting edit mode
-            editTitle(todo.id, inputValue);
+    const handleAssigneeChange = (e) => {
+        const { value, checked } = e.target;
+        if (checked) {
+            setSelectedAssignees((prev) => [...prev, value]);
+        } else {
+            setSelectedAssignees((prev) => prev.filter((assignee) => assignee !== value));
         }
+    };
+
+    const saveChanges = () => {
+        editTitle(todo.id, newTitle);
+        editPriority(todo.id, newPriority);
+        editStatus(todo.id, newStatus);
+        editAssignees(todo.id, selectedAssignees);
+        setIsEditMode(false); // Exit edit mode
     };
 
     return (
         <div className="todo-item">
-            <div className="todo-header">
-                <p><strong>Title:</strong></p>
-                {isEditmode ? (
-                    <input
-                        value={inputValue}
-                        onChange={handleTitleChange}
-                        type="text"
-                        className="todo-title-input"
-                    />
-                ) : (
-                    <span>{todo.value}</span>
-                )}
-            </div>
+            <h3>{isEditMode ? <input value={newTitle} onChange={handleTitleChange} /> : todo.value}</h3>
 
-            {/* Priority */}
-            <div className="todo-details">
-                <p><strong>Priority:</strong> </p>
-                {isEditmode ? (
-                    <select value={todo.priority} onChange={handlePriorityChange}>
+            <p>
+                <strong>Priority:</strong>
+                {isEditMode ? (
+                    <select value={newPriority} onChange={handlePriorityChange}>
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
@@ -56,29 +49,47 @@ const Todo = ({ todo }) => {
                 ) : (
                     <span>{todo.priority}</span>
                 )}
-            </div>
+            </p>
 
-            {/* Status */}
-            <div className="todo-details">
-                <p><strong>Status:</strong> </p>
-                {isEditmode ? (
-                    <select value={todo.status} onChange={handleStatusChange}>
-                        <option value="todo">To do</option>
+            <p>
+                <strong>Status:</strong>
+                {isEditMode ? (
+                    <select value={newStatus} onChange={handleStatusChange}>
+                        <option value="todo">To Do</option>
                         <option value="doing">Doing</option>
                         <option value="done">Done</option>
                     </select>
                 ) : (
                     <span>{todo.status}</span>
                 )}
-            </div>
+            </p>
 
-            {/* Action buttons */}
-            <div className="todo-actions">
-                <button className="delete-btn" onClick={() => deleteTodo(todo.id)}>
-                    Delete
-                </button>
-                <button className="edit-btn" onClick={handleEdit}>
-                    {isEditmode ? "Save" : "Edit task"}
+            <p>
+                <strong>Assignees:</strong>
+                {isEditMode ? (
+                    <div className="assignees-checkboxes">
+                        {availableAssignees.map((assignee) => (
+                            <label key={assignee}>
+                                <input
+                                    type="checkbox"
+                                    value={assignee}
+                                    checked={selectedAssignees.includes(assignee)}
+                                    onChange={handleAssigneeChange}
+                                />
+                                {assignee}
+                            </label>
+                        ))}
+                    </div>
+                ) : (
+                    <span>{todo.assignees.join(", ")}</span>
+                )}
+            </p>
+
+
+            <div>
+                <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+                <button onClick={() => (isEditMode ? saveChanges() : setIsEditMode(true))}>
+                    {isEditMode ? "Save" : "Edit"}
                 </button>
             </div>
         </div>

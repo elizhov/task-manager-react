@@ -23,7 +23,8 @@ const reducer = (state, action) => {
                 id: generateId(),
                 value: payload.value,
                 priority: payload.priority || "low", // default
-                status: payload.status || "todo" // default
+                status: payload.status || "todo", // default
+                assignees: payload.assignees || [] //default
             }];
 
         case ACTIONS.DELETE_TODO:
@@ -42,6 +43,10 @@ const reducer = (state, action) => {
             return state.map((todo) =>
                 todo.id === payload.id ? { ...todo, value: payload.value } : todo
             );
+        case ACTIONS.EDIT_ASSIGNEES:
+            return state.map((todo) =>
+                todo.id === payload.id ? { ...todo, assignees: payload.assignees } : todo
+            );
 
         default: return state;
     }
@@ -56,7 +61,8 @@ const TodoProvider = ({children}) => {
             payload: {
                 value: todo.value,
                 priority: todo.priority,
-                status: todo.status
+                status: todo.status,
+                assignees: todo.assignees || []
             }
         });
     };
@@ -78,8 +84,13 @@ const TodoProvider = ({children}) => {
         dispatch({type: ACTIONS.DELETE_TODO, payload: {id}})
     }
 
+    const editAssignees = (id, assignees) => {
+        dispatch({ type: ACTIONS.EDIT_ASSIGNEES, payload: { id, assignees } });
+    };
+
+
     return (
-        <TodoContext.Provider value={{ todos, addTodo, deleteTodo, editPriority, editStatus, editTitle }}>
+        <TodoContext.Provider value={{ todos, addTodo, deleteTodo, editPriority, editStatus, editTitle,  editAssignees }}>
             {children}
         </TodoContext.Provider>
 
